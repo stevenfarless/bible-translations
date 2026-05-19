@@ -1,0 +1,96 @@
+name: Generate Translation
+
+on:
+  workflow_dispatch:
+    inputs:
+      translation:
+        description: 'Bible translation to generate'
+        required: true
+        type: choice
+        options:
+          - ASV
+          - BRG
+          - CEB
+          - CEV
+          - CEVD
+          - CEVUS06
+          - CJB
+          - CSB
+          - DARBY
+          - DLNT
+          - DRA
+          - DSV
+          - EASY
+          - EHV
+          - ERV
+          - ESV
+          - ESVUK
+          - EXB
+          - GNT
+          - GNV
+          - GW
+          - GWT
+          - HCSB
+          - ICB
+          - ISV
+          - JUB
+          - KJ21
+          - KJV
+          - LEB
+          - MEV
+          - MSG
+          - NABRE
+          - NASB
+          - NASB1995
+          - NET
+          - NIrV
+          - NIV
+          - NIVUK
+          - NKJV
+          - NLT
+          - NLV
+          - NRSVA
+          - NRSVACE
+          - NRSVCE
+          - NTE
+          - PHILLIPS
+          - RSV
+          - RSVCE
+          - TLB
+          - TLV
+          - VOICE
+          - WEB
+          - WE
+          - WMBBE
+          - WYC
+          - YLT
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install meaningless
+
+      - name: Generate translation
+        run: python bible_gateway.py ${{ github.event.inputs.translation }}
+
+      - name: Commit and push output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Generate ${{ github.event.inputs.translation }} translation"
+          git push

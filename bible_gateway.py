@@ -83,11 +83,11 @@ def generate_progress_bar(progress, total, length=20):
 
 
 def generate_bible(bible_translation, show_progress=True):
-    # root
-    if not os.path.exists(bible_translation):
-        os.makedirs(bible_translation)
+    # root output folder: translations/<TRANSLATION>/
+    root = os.path.join("translations", bible_translation) + "/"
+    if not os.path.exists(root):
+        os.makedirs(root)
 
-    root = bible_translation + "/"
     path = root + bible_translation + "_books"
     if not os.path.exists(path):
         os.makedirs(path)
@@ -161,23 +161,32 @@ def generate_bible(bible_translation, show_progress=True):
 
 
 if __name__ == '__main__':
-    print("[+] Available Translations: ")
-    for bt in BIBLE_TRANSLATIONS.keys():
-        sys.stdout.write(bt + " ")
-        TOTAL += 66
-
-    download_all = input("\n[+] Download all translations (Y/N): ").upper()
-    if download_all == "Y":
-        bibles_trans = list(BIBLE_TRANSLATIONS.keys())
-        # remove NMB since it's not complete
-        bibles_trans.remove("NMB")
-        bibles_trans.remove("RVA")
-        bibles_trans.sort()
-        TOTAL -= 66 * 2
-        for t in bibles_trans:
-            generate_bible(t, show_progress=False)
-        print("\n[+] All translations downloaded!")
-
-    else:
-        translation = input("[+] Translation: ").upper()
+    # When a translation code is passed as a CLI argument (e.g. from a GitHub Action),
+    # run non-interactively. Otherwise fall back to the interactive prompt.
+    if len(sys.argv) > 1:
+        translation = sys.argv[1].upper()
+        if translation not in BIBLE_TRANSLATIONS:
+            print(f"[!] Unknown translation: {translation}")
+            print("[+] Available translations: " + " ".join(BIBLE_TRANSLATIONS.keys()))
+            sys.exit(1)
         generate_bible(translation)
+    else:
+        print("[+] Available Translations: ")
+        for bt in BIBLE_TRANSLATIONS.keys():
+            sys.stdout.write(bt + " ")
+            TOTAL += 66
+
+        download_all = input("\n[+] Download all translations (Y/N): ").upper()
+        if download_all == "Y":
+            bibles_trans = list(BIBLE_TRANSLATIONS.keys())
+            # remove NMB since it's not complete
+            bibles_trans.remove("NMB")
+            bibles_trans.remove("RVA")
+            bibles_trans.sort()
+            TOTAL -= 66 * 2
+            for t in bibles_trans:
+                generate_bible(t, show_progress=False)
+            print("\n[+] All translations downloaded!")
+        else:
+            translation = input("[+] Translation: ").upper()
+            generate_bible(translation)
